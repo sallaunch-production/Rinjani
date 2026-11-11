@@ -1,93 +1,165 @@
-# rinjani
+# Rinjani
 
+A web application for **remittance agents** (Artha Sejahtera Utama / Arsema) to send and receive money through the **MoneyGram API**, with a daily transaction dashboard and a *maker–approver* approval workflow.
 
+## Features
 
-## Getting started
+| Feature | Description |
+|---|---|
+| **Dashboard** | Today's transaction summary: Send (Created / Need Approval) and Receive (Created / Need Approval) |
+| **Send** | Select a destination country, enter an amount, choose a quote method (*Include Fee*, *Exclude Fee*, *Receive Amount*), pick a delivery option from the MoneyGram quote, then continue to the transaction form (`/gfpp`) |
+| **Receive** | Look up a transaction by reference number, view sender, receiver, status, and amounts, then continue to the payout process (`/gfpp`) |
+| **Change Password** | Change the user's password |
+| **Authentication & Roles** | JWT-based login. The `maker` role creates transactions and the `approver` role approves them |
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Tech Stack
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+**Frontend** (`agentv3-react-rinjani`)
+- Next.js + React (TypeScript)
+- Tailwind CSS
+- axios, react-select, react-number-format
+- SweetAlert2, js-cookie, jwt-decode, moment
 
-## Add your files
+**Backend** (`arsema-backend-rinjani`)
+- Node.js (Express)
+- PostgreSQL
+- JWT (`accessToken`)
+- MoneyGram API integration
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Repository Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/afreedom/rinjani.git
-git branch -M main
-git push -uf origin main
+rinjani/
+├── agentv3-react-rinjani/     # Frontend (Next.js), port 4000
+├── arsema-backend-rinjani/    # Backend (Node.js), port 5000
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/                # Data access models (Postgres)
+│   ├── mail/
+│   ├── logs/
+│   └── server.js
+└── README.md
 ```
 
-## Integrate with your tools
+## Prerequisites
 
-- [ ] [Set up project integrations](https://gitlab.com/afreedom/rinjani/-/settings/integrations)
+- Node.js 18 or later
+- npm
+- PostgreSQL (database `last_arsema`)
+- MoneyGram API credentials (required for Send and Receive)
 
-## Collaborate with your team
+## Installation and Running
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### 1. Backend
 
-## Test and Deploy
+```bash
+cd arsema-backend-rinjani
+npm install
+cp .env.example .env     # then fill in the values
+npm run dev              # or: node server.js
+```
 
-Use the built-in continuous integration in GitLab.
+The backend runs at `http://localhost:5000`.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 2. Frontend
 
-***
+```bash
+cd agentv3-react-rinjani
+npm install
+cp .env.example .env.local   # then fill in the values
+npm run dev -- -p 4000
+```
 
-# Editing this README
+The frontend runs at `http://localhost:4000`.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+> Script names (`dev`, `start`) follow each folder's `package.json`. Adjust them if they differ.
 
-## Suggestions for a good README
+## Environment Configuration
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Backend (`arsema-backend-rinjani/.env`)
 
-## Name
-Choose a self-explaining name for your project.
+```env
+PORT=5000
+NODE_ENV=development
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+# PostgreSQL
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=last_arsema
+DB_USER=<your_db_user>
+DB_PASSWORD=<your_db_password>
+DB_SCHEMA=public
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+# Auth (login uses JWT: response.data.accessToken)
+TOKEN_SECRET=<long_random_secret>
+JWT_EXPIRES_IN=1d
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+# Allow the frontend to access the backend (CORS)
+CORS_ORIGIN=http://localhost:4000
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Frontend (`agentv3-react-rinjani/.env.local`)
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+> **Important:** never commit the `.env` file or share its contents (database password and `TOKEN_SECRET`). Make sure `.env` is listed in `.gitignore` and keep only an `.env.example` without secret values in the repository. If a secret has ever been committed or shared, rotate it immediately.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## API Endpoints Used by the Frontend
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/country-info` | List of destination countries |
+| POST | `/api/send` | MoneyGram fee inquiry (quote and exchange rate) |
+| POST | `/api/receive` | Look up a transaction by reference number |
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+All requests (except login) must include the header `Authorization: Bearer <token>`.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Workflow
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. **Login** → the backend returns a JWT, stored in the `token` cookie.
+2. **Maker** creates transactions:
+   - *Send*: choose country, amount, and quote method → pick a quote option → fill in sender and receiver details at `/gfpp`.
+   - *Receive*: enter the reference number → check the status (`AVAIL`, `okForAgent`, `okForPickup`) → continue to `/gfpp`.
+3. **Approver** approves transactions with the *Need Approval* status.
+4. **Dashboard** shows today's transaction counts by status.
+
+The Send page can only be opened by users with the `maker` role. Temporary data between pages is kept in `sessionStorage` (`gfpp` for Send, `rcvgfpp` for Receive).
+
+## Database
+
+Main transaction tables (PostgreSQL) include:
+
+- `transaksi_send_clients`, `transaksi_send_temp_clients`
+- `transaksi_receive_clients`, `transaksi_receive_temp_clients`
+- `transaksi_cancel`, `transaksi_reject`, `transaksi_log`
+
+Key columns in `transaksi_send_clients`: `no` (PK, auto-increment), `id_transaksi`, `maker`, `approver`, `status_cta`, `agent_id`, `tanggal`, `created_at`.
+
+### Data notes
+
+- `id_transaksi` uses the format `YYYYMMDDHH24MISS` in WIB (UTC+7).
+- `tanggal` is `timestamp without time zone` and is stored in **UTC**, while `created_at` is `timestamptz` (WIB, +07). Keep the 7-hour offset in mind when creating test data.
+- The dashboard shows **today's transactions**. Test data must be dated today for the counts to appear, and the `maker` column must match the email of the logged-in user.
+
+## Troubleshooting
+
+| Problem | What to check |
+|---|---|
+| Dashboard shows 0 | Test data is not dated today, `maker` does not match the logged-in user, or the `status_cta` value is wrong |
+| CORS error in the browser | `CORS_ORIGIN` in the backend must exactly match the frontend address (`http://localhost:4000`) |
+| 401 Unauthorized | The token has expired (`JWT_EXPIRES_IN`) or the `token` cookie is missing; log in again |
+| Send page redirects to the dashboard | The user does not have the required `maker` role |
+| Backend cannot connect to the database | Check the `DB_*` values in `.env` and make sure PostgreSQL is running |
+
+## Security
+
+- Keep all secrets in `.env`, never in code.
+- Use a long, random `TOKEN_SECRET` that differs per environment.
+- Do not use the production database for test data.
+- This repository should be **private**.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Proprietary. Copyright Artha Sejahtera Utama (Arsema). All rights reserved.
